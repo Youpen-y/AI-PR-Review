@@ -1,4 +1,4 @@
-name: AI PR Chat Bot (Copilot Style)
+name: AI PR Chat Bot (Copilot Chat Style)
 
 on:
   issue_comment:
@@ -18,16 +18,23 @@ jobs:
         with:
           fetch-depth: 0
 
+      # --------------------------------------------------
+      # 1. Check trigger
+      # --------------------------------------------------
       - name: Check trigger
         id: trigger
         run: |
           BODY="${{ github.event.comment.body }}"
           AUTHOR="${{ github.event.comment.user.login }}"
+
+          # Ignore bot itself
           if [ "$AUTHOR" = "github-actions[bot]" ]; then
             echo "go=false" >> $GITHUB_OUTPUT
             exit 0
           fi
-          if echo "$BODY" | grep -qiE '^/ai|@ai-reviewer'; then
+
+          # Only respond to /ai or @ai
+          if echo "$BODY" | grep -qiE '^/ai\b|@ai\b'; then
             echo "go=true" >> $GITHUB_OUTPUT
           else
             echo "go=false" >> $GITHUB_OUTPUT
@@ -36,6 +43,9 @@ jobs:
       - if: steps.trigger.outputs.go != 'true'
         run: exit 0
 
+      # --------------------------------------------------
+      # 2. Fetch PR diff (only once)
+      # --------------------------------------------------
       - name: Fetch PR diff
         env:
           GH_TOKEN: ${{ github.token }}
@@ -45,6 +55,9 @@ jobs:
             -H "Accept: application/vnd.github.v3.diff" \
             "${{ github.event.issue.pull_request.url }}" > pr.diff
 
+      # --------------------------------------------------
+      # 3. Generate Copilot-style chat response
+      # --------------------------------------------------
       - name: Generate AI response
         env:
           ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
@@ -55,16 +68,43 @@ jobs:
           diff = open("pr.diff", encoding="utf-8", errors="ignore").read()
           question = """${{ github.event.comment.body }}"""
 
+          q = question.lower()
+          review_mode = any(
+              k in q for k in [
+                  "review",
+                  "issue",
+                  "problem",
+                  "bug",
+                  "concern",
+                  "lgtm"
+              ]
+          )
+
+          if review_mode:
+              instruction = (
+                  "Do a LIGHT review focused ONLY on what the user asked.\n"
+                  "- List at most 3 points.\n"
+                  "- No full PR summary.\n"
+              )
+          else:
+              instruction = (
+                  "Answer ONLY the user's question.\n"
+                  "- Do NOT do a code review.\n"
+                  "- Do NOT summarize the PR.\n"
+              )
+
           prompt = (
-              "You are an AI code reviewer like GitHub Copilot Review.\n\n"
-              "Respond only to the user's comment, using the PR diff as context.\n\n"
+              "You are GitHub Copilot Chat for a pull request.\n\n"
+              + instruction +
+              "\n"
               "Rules:\n"
-              "- Use **bold headings**: **Summary**, **Potential Issues**, **Suggestions**, **LGTM**\n"
-              "- Use bullet lists\n"
-              "- Place overall LGTM at the bottom\n"
-              "- Do NOT use # or ## headings\n\n"
-              "PR diff:\n" + diff + "\n\n"
-              "User comment:\n" + question
+              "- Be concise and direct.\n"
+              "- Max ~10 lines.\n"
+              "- Do NOT repeat the diff.\n"
+              "- Use bullet points only if helpful.\n"
+              "- Do NOT use Markdown headings (# or ##).\n\n"
+              "PR diff (use only if necessary):\n" + diff + "\n\n"
+              "User question:\n" + question
           )
 
           resp = requests.post(
@@ -76,23 +116,30 @@ jobs:
               json={
                   "model": "glm-4.7",
                   "messages": [
-                      {"role": "system", "content": "You are a senior software engineer reviewing a PR."},
+                      {"role": "system", "content": "You are a senior engineer acting as GitHub Copilot Chat."},
                       {"role": "user", "content": prompt},
                   ],
                   "temperature": 0.3,
               },
           )
+
           resp.raise_for_status()
-          open("reply.md", "w", encoding="utf-8").write(resp.json()["choices"][0]["message"]["content"])
+          content = resp.json()["choices"][0]["message"]["content"]
+
+          with open("reply.md", "w", encoding="utf-8") as f:
+              f.write(content.strip())
           EOF
 
+      # --------------------------------------------------
+      # 4. Post reply
+      # --------------------------------------------------
       - name: Post reply
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const reply = fs.readFileSync('reply.md', 'utf8');
-            const commentBody = '🤖 **AI Reviewer**\n\n' + reply;
+            const commentBody = '🤖 **AI**\n\n' + reply;
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
