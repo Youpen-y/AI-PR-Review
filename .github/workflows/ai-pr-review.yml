@@ -35,19 +35,16 @@ jobs:
 
           diff = open("pr.diff", encoding="utf-8", errors="ignore").read()
 
-          prompt = f"""
-You are an AI code reviewer like GitHub Copilot Review.
-
-Task:
-- Review ONLY the PR diff.
-- Use **bold headings**: **Summary**, **Potential Issues**, **Suggestions**, **LGTM**
-- Use bullet lists for points
-- Do NOT use # or ## headings
-- Place overall LGTM at the bottom
-
-PR diff:
-{diff}
-"""
+          prompt = (
+              "You are an AI code reviewer like GitHub Copilot Review.\n\n"
+              "Task:\n"
+              "- Review ONLY the PR diff.\n"
+              "- Use **bold headings**: **Summary**, **Potential Issues**, **Suggestions**, **LGTM**\n"
+              "- Use bullet lists for points\n"
+              "- Do NOT use # or ## headings\n"
+              "- Place overall LGTM at the bottom\n\n"
+              f"PR diff:\n{diff}"
+          )
 
           resp = requests.post(
               "https://open.bigmodel.cn/api/paas/v4/chat/completions",
@@ -100,5 +97,3 @@ PR diff:
                 issue_number: context.issue.number,
                 body: `### 🤖 AI PR Review (GLM)\n\n${body}`,
               });
-            }
-
