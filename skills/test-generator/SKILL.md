@@ -81,17 +81,18 @@ describe('FunctionName', () => {
 ### JavaScript (Jest)
 
 ```javascript
-describe('calculateTotal', () => {
-  it('calculates sum with tax', () => {
-    expect(calculateTotal(100, 0.1)).toBe(110);
+describe('sumPrices', () => {
+  it('calculates sum of prices with tax', () => {
+    const prices = [100, 200, 50];
+    expect(sumPrices(prices, 0.1)).toBe(385);
   });
 
   it('returns 0 for empty array', () => {
-    expect(calculateTotal([])).toBe(0);
+    expect(sumPrices([], 0.1)).toBe(0);
   });
 
   it('throws for negative price', () => {
-    expect(() => calculateTotal(-10)).toThrow();
+    expect(() => sumPrices([-10], 0.1)).toThrow();
   });
 });
 ```
@@ -99,15 +100,15 @@ describe('calculateTotal', () => {
 ### Python (pytest)
 
 ```python
-def test_calculate_total_with_tax():
-    assert calculate_total(100, 0.1) == 110
+def test_sum_prices_with_tax():
+    assert sum_prices([100, 200, 50], 0.1) == 385
 
-def test_calculate_total_empty():
-    assert calculate_total([]) == 0
+def test_sum_prices_empty():
+    assert sum_prices([], 0.1) == 0
 
-def test_calculate_total_negative_raises():
+def test_sum_prices_negative_raises():
     with pytest.raises(ValueError):
-        calculate_total(-10)
+        sum_prices([-10], 0.1)
 ```
 
 ### Rust
@@ -115,16 +116,67 @@ def test_calculate_total_negative_raises():
 ```rust
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
-    fn test_calculate_total_with_tax() {
-        assert_eq!(calculate_total(100, 0.1), 110);
+    fn test_sum_prices_with_tax() {
+        assert_eq!(sum_prices(&[100, 200, 50], 0.1), 385);
+    }
+
+    #[test]
+    fn test_sum_prices_empty() {
+        assert_eq!(sum_prices(&[], 0.1), 0);
     }
 
     #[test]
     #[should_panic(expected = "negative value")]
-    fn test_calculate_total_negative_panics() {
-        calculate_total(-10, 0.1);
+    fn test_sum_prices_negative_panics() {
+        sum_prices(&[-10], 0.1);
     }
+}
+```
+
+### Go
+
+```go
+func TestSumPrices(t *testing.T) {
+    tests := []struct {
+        name    string
+        prices  []int
+        taxRate float64
+        want    int
+    }{
+        {
+            name:    "calculates sum with tax",
+            prices:  []int{100, 200, 50},
+            taxRate: 0.1,
+            want:    385,
+        },
+        {
+            name:    "empty array returns zero",
+            prices:  []int{},
+            taxRate: 0.1,
+            want:    0,
+        },
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got := SumPrices(tt.prices, tt.taxRate)
+            if got != tt.want {
+                t.Errorf("SumPrices(%v, %v) = %v, want %v", tt.prices, tt.taxRate, got, tt.want)
+            }
+        })
+    }
+}
+
+func TestSumPricesNegativePanic(t *testing.T) {
+    defer func() {
+        if r := recover(); r == nil {
+            t.Errorf("SumPrices(-10, 0.1) should panic")
+        }
+    }()
+    SumPrices([]int{-10}, 0.1)
 }
 ```
 

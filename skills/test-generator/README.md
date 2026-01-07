@@ -24,42 +24,15 @@ Generate unit tests for the API handler
 
 Claude will use this skill to generate comprehensive tests.
 
-## Features
+## Supported Languages
 
-### Structured Framework
-
-- Happy path coverage
-- Edge case identification
-- Error handling verification
-- External dependency mocking
-- Framework-specific implementations
-
-### Comprehensive Coverage
-
-| Category | Purpose | Example |
-|----------|---------|---------|
-| **Happy Path** | Normal operation | Valid input → expected output |
-| **Edge Cases** | Boundary values | Empty, null, max/min values |
-| **Error Cases** | Invalid input | Wrong type, missing fields |
-| **Integration** | Multiple components | API calls, database |
-
-### Supported Languages
-
-| Language | Framework | Status |
-|----------|-----------|--------|
-| JavaScript | Jest | ✅ |
-| TypeScript | Jest + types | ✅ |
-| Python | pytest | ✅ |
-| Rust | built-in | ✅ |
-| Go | testing | ✅ |
-
-## Structure
-
-```
-test-generator/
-├── SKILL.md    # Main skill documentation
-└── README.md   # This file
-```
+| Language | Framework |
+|----------|-----------|
+| JavaScript | Jest |
+| TypeScript | Jest + types |
+| Python | pytest |
+| Rust | built-in |
+| Go | testing |
 
 ## Usage Examples
 
@@ -67,25 +40,22 @@ test-generator/
 
 **Request:**
 ```
-Write tests for calculateTotal function
+Write tests for sumPrices function
 ```
 
 **Generated Tests:**
 ```javascript
-describe('calculateTotal', () => {
-  // Happy path
-  it('calculates sum with tax', () => {
-    expect(calculateTotal(100, 0.1)).toBe(110);
+describe('sumPrices', () => {
+  it('calculates sum of prices with tax', () => {
+    expect(sumPrices([100, 200, 50], 0.1)).toBe(385);
   });
 
-  // Edge cases
   it('returns 0 for empty array', () => {
-    expect(calculateTotal([])).toBe(0);
+    expect(sumPrices([], 0.1)).toBe(0);
   });
 
-  // Error cases
   it('throws for negative price', () => {
-    expect(() => calculateTotal(-10)).toThrow();
+    expect(() => sumPrices([-10], 0.1)).toThrow();
   });
 });
 ```
@@ -113,134 +83,82 @@ def test_create_user_invalid_email():
         create_user("not-an-email")
 ```
 
+### Go
+
+**Request:**
+```
+Add test coverage for the price calculator
+```
+
+**Generated Tests:**
+```go
+func TestSumPrices(t *testing.T) {
+    tests := []struct {
+        name    string
+        prices  []int
+        taxRate float64
+        want    int
+    }{
+        {"calculates sum with tax", []int{100, 200, 50}, 0.1, 385},
+        {"empty array returns zero", []int{}, 0.1, 0},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got := SumPrices(tt.prices, tt.taxRate)
+            if got != tt.want {
+                t.Errorf("SumPrices(%v, %v) = %v, want %v", tt.prices, tt.taxRate, got, tt.want)
+            }
+        })
+    }
+}
+```
+
 ### Rust
 
 **Request:**
 ```
-Generate tests for the parser module
+Generate tests for the price calculator
 ```
 
 **Generated Tests:**
 ```rust
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
-    fn test_parse_valid_input() {
-        let result = parse("valid input");
-        assert_eq!(result, Expected::Value);
+    fn test_sum_prices_with_tax() {
+        assert_eq!(sum_prices(&[100, 200, 50], 0.1), 385);
     }
 
     #[test]
-    #[should_panic(expected = "invalid format")]
-    fn test_parse_invalid_panics() {
-        parse("invalid");
+    fn test_sum_prices_empty() {
+        assert_eq!(sum_prices(&[], 0.1), 0);
+    }
+
+    #[test]
+    #[should_panic(expected = "negative value")]
+    fn test_sum_prices_negative_panics() {
+        sum_prices(&[-10], 0.1);
     }
 }
 ```
 
-## Test Generation Template
+## What Gets Tested
 
-### 1. Clarification Questions
+Generated tests typically cover:
+- **Happy Path** - Normal operation with valid inputs
+- **Edge Cases** - Empty/null values, boundaries
+- **Error Cases** - Invalid inputs, exceptions
 
-Before generating tests, the skill will ask:
-- What function/module needs tests?
-- What testing framework (Jest, pytest, etc.)?
-- What are the expected behaviors?
-- Any specific edge cases to cover?
+## Further Documentation
 
-### 2. Test Structure
-
-```javascript
-describe('FunctionName', () => {
-  // Happy path
-  it('should return expected result for valid input', () => {
-    const result = functionName(validInput);
-    expect(result).toEqual(expectedOutput);
-  });
-
-  // Edge cases
-  it('should handle empty input', () => {
-    const result = functionName(empty);
-    expect(result).toEqual(defaultValue);
-  });
-
-  // Error cases
-  it('should throw error for invalid input', () => {
-    expect(() => functionName(invalid)).toThrow();
-  });
-});
-```
-
-## Best Practices
-
-### Test Writing Principles
-
-| Principle | Description |
-|-----------|-------------|
-| **Arrange-Act-Assert** | Clear test structure |
-| **Descriptive names** | Tests should document behavior |
-| **One assertion per test** | Single responsibility |
-| **Mock external deps** | Isolate unit under test |
-| **Test behavior** | Focus on what, not how |
-
-### Mocking Guidelines
-
-```javascript
-// Mock API calls
-jest.mock('./api', () => ({
-  fetchData: jest.fn(() => Promise.resolve({ data: 'mock' }))
-}));
-
-// Mock timers
-jest.useFakeTimers();
-
-// Mock environment
-process.env.NODE_ENV = 'test';
-```
-
-### Test Checklist
-
-When generating tests, ensure:
-
-- [ ] All public functions covered
-- [ ] Happy path tested
-- [ ] Edge cases included
-- [ ] Error handling verified
-- [ ] External dependencies mocked
-- [ ] Tests are independent
-- [ ] Tests run fast (< 100ms each)
-- [ ] Descriptive test names
-
-## Response Format
-
-The skill provides structured responses:
-
-```
-## Tests for [Function/Module]
-
-### Happy Path
-- [Test case 1]
-- [Test case 2]
-
-### Edge Cases
-- [Edge case 1]
-- [Edge case 2]
-
-### Error Cases
-- [Error case 1]
-
-### Full Test Code
-[Complete test file]
-```
-
-## Language-Specific Concepts
-
-| Language | Key Concepts |
-|----------|--------------|
-| JavaScript | Async tests, mocking, timers |
-| Python | Fixtures, parametrize, raises |
-| Rust | Attribute tests, should_panic |
-| Go | Table-driven tests, subtests |
+See [SKILL.md](./SKILL.md) for:
+- Detailed test generation framework
+- Best practices and guidelines
+- Mocking strategies
+- Complete code examples
 
 ## License
 
