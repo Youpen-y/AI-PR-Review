@@ -210,22 +210,6 @@ pip install py-spy
 py-spy top --pid <PID>
 ```
 
-### Go
-
-```bash
-# CPU profiling
-go test -cpuprofile=cpu.prof
-go tool pprof cpu.prof
-
-# Memory profiling
-go test -memprofile=mem.prof
-go tool pprof mem.prof
-
-# HTTP profiling (add to imports)
-import _ "net/http/pprof"
-# Visit http://localhost:6060/debug/pprof/
-```
-
 ## What Gets Optimized
 
 Generated optimizations typically address:

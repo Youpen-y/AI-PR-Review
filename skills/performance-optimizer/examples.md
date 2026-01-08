@@ -418,6 +418,8 @@ async function processLargeFile(inputPath, outputPath) {
 
 **Before:**
 ```python
+import csv
+
 def process_csv_file(filepath):
     """Process a large CSV file"""
     with open(filepath) as f:
@@ -438,6 +440,8 @@ def process_csv_file(filepath):
 
 **After:**
 ```python
+import csv
+
 # Option 1: Process and yield results
 def process_csv_file(filepath):
     """Process a large CSV file using generators"""
