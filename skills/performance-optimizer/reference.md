@@ -80,6 +80,8 @@ Comprehensive guide to performance analysis, optimization strategies, and best p
 | **JProfiler** | Java | CPU/Memory/Threads | Java apps |
 | **flamegraph** | Multiple | Visualization | Hot path analysis |
 
+**Production Monitoring:** For production environments, use APM tools like **Datadog**, **New Relic** (commercial), or **Prometheus** (open source) to continuously monitor performance metrics.
+
 ### Key Metrics
 
 | Metric | Definition | Target |
