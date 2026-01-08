@@ -316,6 +316,32 @@ class User:
 # Bad: sum([x * 2 for x in range(1000000)])
 
 # Good: sum(x * 2 for x in range(1000000))  # Generator expression
+
+# Use asyncio for I/O-bound concurrency
+import asyncio
+
+async def fetch_all(urls):
+    # Bad: Sequential requests
+    # results = []
+    # for url in urls:
+    #     results.append(await fetch_url(url))
+
+    # Good: Parallel I/O with asyncio.gather
+    tasks = [fetch_url(url) for url in urls]
+    results = await asyncio.gather(*tasks)
+    return results
+
+# With concurrency limit
+async def fetch_all_limited(urls, limit=10):
+    semaphore = asyncio.Semaphore(limit)
+
+    async def bounded_fetch(url):
+        async with semaphore:
+            return await fetch_url(url)
+
+    tasks = [bounded_fetch(url) for url in urls]
+    results = await asyncio.gather(*tasks)
+    return results
 ```
 
 #### Go
