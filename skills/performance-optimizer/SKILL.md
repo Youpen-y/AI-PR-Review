@@ -27,10 +27,10 @@ node --prof app.js
 node --prof-process isolate-0xnnnnnnnnnnnn-v8.log > processed.txt
 
 // Chrome DevTools for browser
-console.performance.mark('start');
+performance.mark('start');
 // ... code ...
-console.performance.mark('end');
-console.performance.measure('operation', 'start', 'end');
+performance.mark('end');
+performance.measure('operation', 'start', 'end');
 ```
 
 ```python
