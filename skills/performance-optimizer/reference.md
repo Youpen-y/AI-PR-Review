@@ -76,7 +76,7 @@ Comprehensive guide to performance analysis, optimization strategies, and best p
 | **cProfile** | Python | CPU | Python apps |
 | **memory_profiler** | Python | Memory | Memory leaks |
 | **pprof** | Go | CPU/Memory | Go programs |
-| **pprof** | Ruby | CPU/Memory | Ruby apps |
+| **stackprof** | Ruby | CPU/Memory | Ruby apps |
 | **JProfiler** | Java | CPU/Memory/Threads | Java apps |
 | **flamegraph** | Multiple | Visualization | Hot path analysis |
 

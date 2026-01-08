@@ -383,6 +383,49 @@ fn process_string(s: &str) -> Cow<str> {
 }
 ```
 
+#### Java
+
+```java
+// Use StringBuilder for string concatenation
+// Bad: Creates many intermediate String objects
+String result = "";
+for (int i = 0; i < 1000; i++) {
+    result += i;
+}
+
+// Good: Uses mutable StringBuilder
+StringBuilder sb = new StringBuilder();
+for (int i = 0; i < 1000; i++) {
+    sb.append(i);
+}
+String result = sb.toString();
+
+// Use streams with caution
+// Bad: Boxing/unboxing overhead
+Integer sum = list.stream()
+    .reduce(0, (a, b) -> a + b);
+
+// Good: Primitive streams
+int sum = list.stream()
+    .mapToInt(Integer::intValue)
+    .sum();
+
+// Reuse objects to reduce GC pressure
+// Bad: Creates new DateFormatter each call
+public String formatDate(Date date) {
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    return sdf.format(date);
+}
+
+// Good: Reuse formatter (thread-safe with DateTimeFormatter)
+private static final DateTimeFormatter FORMATTER =
+    DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+public String formatDate(LocalDate date) {
+    return date.format(FORMATTER);
+}
+```
+
 ## Performance Checklist
 
 Before optimizing, verify:
