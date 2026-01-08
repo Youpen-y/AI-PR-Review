@@ -402,6 +402,10 @@ async function processLargeFile(inputPath, outputPath) {
 // Processing 1GB file:
 // Memory usage: ~10MB (only current line in memory)
 // Runs successfully
+
+// Note: For production use with high-volume streams,
+// handle backpressure by checking write() return value
+// and waiting for the 'drain' event when buffer is full.
 ```
 
 **Result:** Memory usage: 2GB → 10MB (200x reduction)
@@ -434,6 +438,7 @@ def process_csv_file(filepath):
 
 **After:**
 ```python
+# Option 1: Process and yield results
 def process_csv_file(filepath):
     """Process a large CSV file using generators"""
     with open(filepath) as f:
@@ -444,14 +449,19 @@ def process_csv_file(filepath):
             processed = transform_row(row)
             yield processed
 
-    # Or write results incrementally
-    with open('output.csv', 'w') as out:
-        writer = csv.DictWriter(out, fieldnames=['id', 'value'])
-        writer.writeheader()
+# Option 2: Stream to output file
+def process_csv_stream(input_path, output_path):
+    """Process CSV and stream results to output file"""
+    with open(input_path) as f:
+        reader = csv.DictReader(f)
 
-        for row in reader:
-            processed = transform_row(row)
-            writer.writerow(processed)
+        with open(output_path, 'w') as out:
+            writer = csv.DictWriter(out, fieldnames=['id', 'value'])
+            writer.writeheader()
+
+            for row in reader:
+                processed = transform_row(row)
+                writer.writerow(processed)
 
 # Processing 10M row CSV:
 # Memory usage: ~1MB (one row at a time)

@@ -43,9 +43,6 @@ My memory usage keeps growing, help me find the leak
 |----------|----------------|---------------|
 | JavaScript/Node.js | Chrome DevTools, Node.js profiler | Event loop blocking, memory leaks |
 | Python | cProfile, memory_profiler, py-spy | GIL, inefficient data structures |
-| Go | pprof, trace | Goroutine leaks, channel misuse |
-| Rust | flamegraph, criterion | Unnecessary allocations |
-| Java | JProfiler, VisualVM | GC tuning, thread contention |
 
 ## Optimization Workflow
 
