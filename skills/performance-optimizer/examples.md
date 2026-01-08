@@ -101,6 +101,8 @@ app.get('/api/users', async (req, res) => {
 // Time: ~150ms
 ```
 
+**Note:** `GROUP_CONCAT` is MySQL/MariaDB specific. For PostgreSQL use `string_agg()`, for SQL Server use `STRING_AGG()`.
+
 **Result:** 10s → 0.15s (67x faster)
 
 ---
@@ -379,39 +381,55 @@ function processLargeFile(inputPath, outputPath) {
 **After:**
 ```javascript
 const { pipeline } = require('stream/promises');
+const { Transform } = require('stream');
 const fs = require('fs');
+const readline = require('readline');
 
 async function processLargeFile(inputPath, outputPath) {
-  // Use pipeline for automatic backpressure handling
+  // For line-by-line processing, use readline with pipeline
   const readStream = fs.createReadStream(inputPath);
   const writeStream = fs.createWriteStream(outputPath);
 
-  // Create transform stream
-  const { Transform } = require('stream');
+  const rl = readline.createInterface({
+    input: readStream,
+    crlfDelay: Infinity
+  });
+
+  // Process each line and write to output
+  for await (const line of rl) {
+    const processed = transformLine(line);
+    writeStream.write(processed + '\n');
+  }
+
+  writeStream.end();
+}
+
+// Alternative: For binary/chunk-based processing (not line-oriented)
+async function processBinaryFile(inputPath, outputPath) {
+  const { pipeline } = require('stream/promises');
+
   const transformStream = new Transform({
     transform(chunk, encoding, callback) {
-      const line = chunk.toString();
-      const processed = transformLine(line);
-      callback(null, processed + '\n');
+      // Process raw chunks (not line-by-line)
+      // Note: chunks may split line boundaries
+      const processed = processChunk(chunk);
+      callback(null, processed);
     }
   });
 
-  // pipeline automatically handles backpressure and errors
   await pipeline(
-    readStream,
+    fs.createReadStream(inputPath),
     transformStream,
-    writeStream
+    fs.createWriteStream(outputPath)
   );
 }
 
 // Processing 1GB file:
-// Memory usage: ~10MB (only current chunk in memory)
+// Memory usage: ~10MB (only current line/chunk in memory)
 // Runs successfully
 
-// pipeline() automatically handles:
-// - Backpressure (pauses reads when writes are slow)
-// - Error propagation (closes streams on error)
-// - Cleanup (destroys streams on completion)
+// Note: Use readline for line-by-line text processing.
+// Use Transform directly only for binary data or chunked operations.
 ```
 
 **Result:** Memory usage: 2GB → 10MB (200x reduction)

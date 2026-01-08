@@ -305,9 +305,11 @@ class User:
         self.email = email
 
 # Use built-in functions instead of loops
-# Bad: sum([x * 2 for x in range(1000000)])
+# Bad: Creates entire list in memory first (~8MB)
+#       sum([x * 2 for x in range(1000000)])
 
-# Good: sum(x * 2 for x in range(1000000))  # Generator expression
+# Good: Generator expression - processes one item at a time (~0 bytes)
+#       sum(x * 2 for x in range(1000000))
 
 # Use asyncio for I/O-bound concurrency
 import asyncio
